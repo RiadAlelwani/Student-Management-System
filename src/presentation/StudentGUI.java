@@ -22,20 +22,46 @@ import java.sql.Connection;
 import java.util.List;
 import java.util.stream.Collectors;
 
+/**
+ * واجهة المستخدم الرسومية لإدارة بيانات الطلاب.
+ * تسمح بإضافة، تعديل، حذف، والبحث عن الطلاب، كما تعرض بياناتهم مع حساب المعدل التراكمي (GPA).
+ * ترث من JPanel وتنفذ واجهة StudentObserver لتحديث البيانات تلقائيًا عند التغييرات.
+ */
 public class StudentGUI extends JPanel implements StudentObserver {
+
     private static final long serialVersionUID = 1L;
 
+    /** خدمة الطلاب للتعامل مع بيانات الطلاب */
     private final StudentService studentService;
+
+    /** خدمة التسجيلات للتعامل مع بيانات التسجيل */
     private final EnrollmentService enrollmentService;
+
+    /** أداة لحساب المعدل التراكمي */
     private final GradeCalculator gradeCalculator;
 
+    /** جدول لعرض بيانات الطلاب */
     private final JTable table;
+
+    /** نموذج بيانات الجدول */
     private final DefaultTableModel tableModel;
+
+    /** حقول الإدخال للنموذج */
     private final JTextField tfName, tfEmail, tfAge, tfMajor, tfSearch;
+
+    /** قائمة لاختيار الجنس */
     private final JComboBox<String> cbGender;
 
+    /**
+     * المُنشئ - يقوم بتهيئة الواجهة وربط خدمات البيانات.
+     * كما يسجل نفسه كمراقب للتغييرات في قائمة الطلاب.
+     *
+     * @param conn اتصال قاعدة البيانات
+     */
     public StudentGUI(Connection conn) {
         setLayout(new BorderLayout());
+
+        // التسجيل كمراقب لتغييرات الطلاب
         StudentNotifier.register(this);
 
         try {
@@ -48,6 +74,7 @@ public class StudentGUI extends JPanel implements StudentObserver {
             throw new RuntimeException(e);
         }
 
+        // إنشاء حقول الإدخال والمكونات الرسومية
         JPanel topPanel = new JPanel(new BorderLayout());
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBorder(BorderFactory.createTitledBorder("Student Info"));
@@ -63,6 +90,7 @@ public class StudentGUI extends JPanel implements StudentObserver {
         tfMajor = new JTextField(15);
         tfSearch = new JTextField(20);
 
+        // تنظيم الحقول في الشبكة
         gbc.gridx = 0; gbc.gridy = 0; inputPanel.add(new JLabel("Name:"), gbc);
         gbc.gridx = 1; inputPanel.add(tfName, gbc);
         gbc.gridx = 2; inputPanel.add(new JLabel("Email:"), gbc);
@@ -78,6 +106,7 @@ public class StudentGUI extends JPanel implements StudentObserver {
         inputPanel.add(new JLabel("Major:"), gbc);
         gbc.gridx = 1; inputPanel.add(tfMajor, gbc);
 
+        // إضافة حقل البحث
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         searchPanel.add(new JLabel("Search by Name:"));
         searchPanel.add(tfSearch);
@@ -86,11 +115,15 @@ public class StudentGUI extends JPanel implements StudentObserver {
         topPanel.add(searchPanel, BorderLayout.SOUTH);
         add(topPanel, BorderLayout.NORTH);
 
+        // إعداد الجدول لعرض بيانات الطلاب
         tableModel = new DefaultTableModel(new String[]{"ID", "Name", "Email", "Gender", "Age", "Major", "GPA"}, 0);
         table = new JTable(tableModel);
-        table.setDefaultEditor(Object.class, null);
+        table.setDefaultEditor(Object.class, null); // منع تعديل الخلايا مباشرة
+        // تلوين الصفوف بالتناوب لتحسين المظهر
+        presentation.GUIUtils.configureTable(table);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // أزرار العمليات الأساسية
         JPanel buttonPanel = new JPanel();
         JButton addBtn = new JButton("Add");
         JButton updateBtn = new JButton("Update");
@@ -103,13 +136,16 @@ public class StudentGUI extends JPanel implements StudentObserver {
         buttonPanel.add(clearBtn);
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // تحميل البيانات الأولي
         loadData();
 
+        // تعيين أحداث الأزرار
         addBtn.addActionListener(e -> handleAdd());
         updateBtn.addActionListener(e -> handleUpdate());
         deleteBtn.addActionListener(e -> handleDelete());
         clearBtn.addActionListener(e -> clearFields());
 
+        // تفعيل البحث التلقائي عند تغير النص
         tfSearch.getDocument().addDocumentListener(new DocumentListener() {
             public void insertUpdate(DocumentEvent e) { search(); }
             public void removeUpdate(DocumentEvent e) { search(); }
@@ -124,6 +160,7 @@ public class StudentGUI extends JPanel implements StudentObserver {
             }
         });
 
+        // تعبئة الحقول عند النقر على صف في الجدول
         table.addMouseListener(new MouseAdapter() {
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
@@ -137,12 +174,16 @@ public class StudentGUI extends JPanel implements StudentObserver {
         });
     }
 
+    /**
+     * تنفيذ عملية إضافة طالب جديد استنادًا إلى بيانات الحقول.
+     * يتم إعلام المراقبين وتحديث الجدول بعد الإضافة.
+     */
     private void handleAdd() {
         try {
             Student s = new Student(0, tfName.getText(), tfEmail.getText(), cbGender.getSelectedItem().toString(),
                     Integer.parseInt(tfAge.getText()), tfMajor.getText(), 0.0);
             studentService.add(s);
-            StudentNotifier.notifyAllObservers();  // notify observers here
+            StudentNotifier.notifyAllObservers();  // إعلام المراقبين بالتغيير
             loadData();
             clearFields();
         } catch (Exception ex) {
@@ -150,6 +191,9 @@ public class StudentGUI extends JPanel implements StudentObserver {
         }
     }
 
+    /**
+     * تنفيذ عملية تحديث بيانات الطالب المحدد في الجدول.
+     */
     private void handleUpdate() {
         int row = table.getSelectedRow();
         if (row == -1) return;
@@ -158,7 +202,7 @@ public class StudentGUI extends JPanel implements StudentObserver {
             Student s = new Student(id, tfName.getText(), tfEmail.getText(), cbGender.getSelectedItem().toString(),
                     Integer.parseInt(tfAge.getText()), tfMajor.getText(), 0.0);
             studentService.update(s);
-            StudentNotifier.notifyAllObservers();  // notify observers here
+            StudentNotifier.notifyAllObservers();  // إعلام المراقبين
             loadData();
             clearFields();
         } catch (Exception ex) {
@@ -166,6 +210,9 @@ public class StudentGUI extends JPanel implements StudentObserver {
         }
     }
 
+    /**
+     * تنفيذ عملية حذف الطالب المحدد بعد تأكيد المستخدم.
+     */
     private void handleDelete() {
         int row = table.getSelectedRow();
         if (row == -1) return;
@@ -174,7 +221,7 @@ public class StudentGUI extends JPanel implements StudentObserver {
             try {
                 int id = Integer.parseInt(tableModel.getValueAt(row, 0).toString());
                 studentService.delete(id);
-                StudentNotifier.notifyAllObservers();  // notify observers here
+                StudentNotifier.notifyAllObservers();  // إعلام المراقبين
                 loadData();
                 clearFields();
             } catch (Exception ex) {
@@ -183,6 +230,9 @@ public class StudentGUI extends JPanel implements StudentObserver {
         }
     }
 
+    /**
+     * تحميل بيانات جميع الطلاب وعرضها في الجدول مع حساب المعدل التراكمي.
+     */
     private void loadData() {
         try {
             fillTable(studentService.getAll());
@@ -191,6 +241,12 @@ public class StudentGUI extends JPanel implements StudentObserver {
         }
     }
 
+    /**
+     * ملء بيانات الجدول بقائمة الطلاب المعطاة.
+     * يقوم بحساب المعدل التراكمي لكل طالب بناءً على تسجيلاته.
+     *
+     * @param students قائمة الطلاب للعرض
+     */
     private void fillTable(List<Student> students) {
         tableModel.setRowCount(0);
         try {
@@ -210,6 +266,9 @@ public class StudentGUI extends JPanel implements StudentObserver {
         }
     }
 
+    /**
+     * مسح حقول الإدخال وإلغاء اختيار الصف في الجدول.
+     */
     private void clearFields() {
         tfName.setText("");
         tfEmail.setText("");
@@ -220,10 +279,18 @@ public class StudentGUI extends JPanel implements StudentObserver {
         table.clearSelection();
     }
 
+    /**
+     * عرض رسالة خطأ منبثقة.
+     *
+     * @param e الاستثناء الذي حصل
+     */
     private void showError(Exception e) {
         JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    /**
+     * دالة استدعاء من المراقب، يتم تحديث البيانات عند حدوث تغييرات في قائمة الطلاب.
+     */
     @Override
     public void onStudentListChanged() {
         loadData();

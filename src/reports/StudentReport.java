@@ -7,14 +7,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * تقرير يعرض قائمة جميع الطلاب مع تفاصيلهم.
+ * يتم عرض التقرير في JPanel يحتوي جدولًا ومعلومات موجزة عن العدد الإجمالي للطلاب.
+ */
 public class StudentReport implements Report {
     private final StudentService studentService;
     private JPanel reportPanel;
 
+    /**
+     * منشئ التقرير مع خدمة الطلاب.
+     * 
+     * @param studentService خدمة الوصول إلى بيانات الطلاب
+     */
     public StudentReport(StudentService studentService) {
         this.studentService = studentService;
     }
 
+    /**
+     * يعرض التقرير بإنشاء جدول يحتوي بيانات جميع الطلاب.
+     * 
+     * @param parent العنصر الأب لعرض النوافذ الحوارية والأخطاء
+     */
     @Override
     public void show(Component parent) {
         try {
@@ -46,11 +60,25 @@ public class StudentReport implements Report {
         }
     }
 
+    /**
+     * إرجاع لوحة التقرير التي تحتوي الجدول والبيانات، أو null إذا لم يتم إنشاؤها.
+     * 
+     * @return JPanel التقرير
+     */
     @Override
     public JPanel getReportPanel() {
         return reportPanel;
     }
 
+    /**
+     * ينشئ لوحة تقرير تحتوي جدول الطلاب مع عنوان ومعلومات موجزة.
+     * 
+     * @param title عنوان التقرير
+     * @param data بيانات الجدول (صفوف وأعمدة)
+     * @param columns أسماء الأعمدة
+     * @param summary نص ملخص يظهر فوق الجدول (مثل عدد الطلاب)
+     * @return JPanel جاهزة للعرض
+     */
     private JPanel createReportPanel(String title, Object[][] data, String[] columns, String summary) {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
@@ -60,12 +88,12 @@ public class StudentReport implements Report {
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        // معلومات (مثل إجمالي عدد الطلاب) تظهر فوق الجدول مباشرة
+        // ملخص المعلومات أعلى الجدول مباشرة
         JPanel infoPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
         infoPanel.add(new JLabel(summary));
         panel.add(infoPanel, BorderLayout.BEFORE_FIRST_LINE);
 
-        // جدول الطلاب
+        // جدول الطلاب مع تمرير شريط التمرير
         JTable table = new JTable(data, columns);
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);

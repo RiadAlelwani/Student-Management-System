@@ -7,14 +7,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * تقرير تسجيلات طالب معين.
+ * يسمح للمستخدم بإدخال اسم الطالب، ثم يعرض جميع التسجيلات (المقررات، المعلم، الفصل، الدرجة) الخاصة به.
+ */
 public class StudentEnrollmentReport implements Report {
     private final StudentService studentService;
     private JPanel reportPanel;
 
+    /**
+     * منشئ التقرير مع خدمة الطلاب.
+     * 
+     * @param studentService خدمة الوصول إلى بيانات الطلاب والتسجيلات
+     */
     public StudentEnrollmentReport(StudentService studentService) {
         this.studentService = studentService;
     }
 
+    /**
+     * يعرض التقرير عبر نافذة حوارية لأخذ اسم الطالب، ثم يُنشئ لوحة تقرير تعرض تسجيلات الطالب.
+     * 
+     * @param parent العنصر الأب لعرض النوافذ الحوارية فوقه
+     */
     @Override
     public void show(Component parent) {
         try {
@@ -42,11 +56,23 @@ public class StudentEnrollmentReport implements Report {
         }
     }
 
+    /**
+     * إرجاع لوحة التقرير التي تم إنشاؤها بعد استدعاء show().
+     * 
+     * @return JPanel يحتوي تقرير التسجيلات أو null إذا لم يتم إنشاء التقرير
+     */
     @Override
     public JPanel getReportPanel() {
         return reportPanel;
     }
 
+    /**
+     * ينشئ لوحة تقرير تحتوي جدول تسجيلات الطالب مع معلومات موجزة.
+     * 
+     * @param studentName اسم الطالب
+     * @param enrollments قائمة تسجيلات الطالب
+     * @return JPanel جاهزة للعرض تحتوي التقرير
+     */
     private JPanel createReportPanel(String studentName, List<Enrollment> enrollments) {
         String[] columns = {"Course", "Teacher", "Semester", "Grade"};
         Object[][] data = new Object[enrollments.size()][columns.length];
@@ -74,7 +100,7 @@ public class StudentEnrollmentReport implements Report {
         infoPanel.add(new JLabel("Total Enrollments: " + enrollments.size()));
         panel.add(infoPanel, BorderLayout.BEFORE_FIRST_LINE);
 
-        // الجدول
+        // الجدول مع تمرير شريط
         JTable table = new JTable(data, columns);
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);

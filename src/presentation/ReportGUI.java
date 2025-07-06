@@ -12,11 +12,15 @@ import java.awt.print.PrinterException;
 import java.sql.Connection;
 import java.text.MessageFormat;
 
+/**
+ * ReportGUI هي واجهة رسومية رئيسية لعرض تقارير مختلفة في النظام.
+ * تشمل تقارير عن الطلاب، المعلمين، الدورات، والتسجيلات.
+ * تحتوي على لوحة أزرار لاختيار التقرير ولوحة عرض لعرض نتائج التقرير المحدد.
+ */
 public class ReportGUI extends JPanel {
 
     private static final long serialVersionUID = 1L;
 
-    // Unified Fonts and Dimensions
     private static final Font TITLE_FONT = new Font("Tahoma", Font.BOLD, 18);
     private static final Font BUTTON_FONT = new Font("Tahoma", Font.PLAIN, 12);
     private static final Font TABLE_FONT = new Font("Tahoma", Font.PLAIN, 12);
@@ -28,6 +32,9 @@ public class ReportGUI extends JPanel {
 
     private JPanel reportDisplayPanel;
     private JPanel currentReportPanel;
+
+    // زر التقرير المختار حالياً (لتمييزه)
+    private JButton activeButton = null;
 
     public ReportGUI() {
         initServices();
@@ -84,7 +91,14 @@ public class ReportGUI extends JPanel {
         JButton button = new JButton(text);
         button.setFont(BUTTON_FONT);
         button.setAlignmentX(Component.LEFT_ALIGNMENT);
-        button.addActionListener(e -> action.run());
+        button.addActionListener(e -> {
+            action.run();
+            if (activeButton != null) {
+                activeButton.setEnabled(true);
+            }
+            button.setEnabled(false);
+            activeButton = button;
+        });
         panel.add(button);
         panel.add(Box.createRigidArea(BUTTON_SPACING));
     }

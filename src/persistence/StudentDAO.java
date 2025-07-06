@@ -12,11 +12,19 @@ import java.util.List;
 public class StudentDAO {
     private final Connection conn;
 
+    /**
+     * منشئ الفئة يأخذ اتصال قاعدة البيانات.
+     * @param conn اتصال قاعدة البيانات المفتوح
+     */
     public StudentDAO(Connection conn) {
         this.conn = conn;
     }
 
-    // إضافة طالب جديد
+    /**
+     * إضافة طالب جديد إلى قاعدة البيانات.
+     * @param s كائن الطالب الذي يحتوي على البيانات المراد إضافتها
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void addStudent(Student s) throws SQLException {
         String sql = "INSERT INTO student (name, email, gender, age, major, gpa) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -30,7 +38,11 @@ public class StudentDAO {
         }
     }
 
-    // الحصول على جميع الطلاب
+    /**
+     * الحصول على قائمة بجميع الطلاب المسجلين في قاعدة البيانات.
+     * @return قائمة تحتوي على جميع كائنات الطلاب
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public List<Student> getAll() throws SQLException {
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM student";
@@ -51,7 +63,11 @@ public class StudentDAO {
         return list;
     }
 
-    // تحديث بيانات الطالب
+    /**
+     * تحديث بيانات طالب موجود في قاعدة البيانات.
+     * @param s كائن الطالب الذي يحتوي على البيانات الجديدة (يجب أن يحتوي على المعرف)
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void updateStudent(Student s) throws SQLException {
         String sql = "UPDATE student SET name=?, email=?, gender=?, age=?, major=?, gpa=? WHERE id=?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -66,7 +82,11 @@ public class StudentDAO {
         }
     }
 
-    // حذف طالب
+    /**
+     * حذف طالب من قاعدة البيانات بواسطة المعرف.
+     * @param id معرف الطالب المراد حذفه
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void deleteStudent(int id) throws SQLException {
         String sql = "DELETE FROM student WHERE id=?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -75,7 +95,12 @@ public class StudentDAO {
         }
     }
 
-    // البحث عن طلاب بالاسم
+    /**
+     * البحث عن طلاب حسب اسم جزئي (باستخدام LIKE).
+     * @param name جزء من اسم الطالب للبحث به
+     * @return قائمة الطلاب الذين تحتوي أسماؤهم على النص المحدد
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public List<Student> searchByName(String name) throws SQLException {
         List<Student> list = new ArrayList<>();
         String sql = "SELECT * FROM student WHERE name LIKE ?";
@@ -97,7 +122,12 @@ public class StudentDAO {
         return list;
     }
 
-    // الحصول على طالب بواسطة المعرف
+    /**
+     * الحصول على بيانات طالب بواسطة معرفه.
+     * @param id معرف الطالب
+     * @return كائن الطالب إذا وجد، أو null إذا لم يتم العثور عليه
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public Student getStudentById(int id) throws SQLException {
         String sql = "SELECT * FROM student WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -118,7 +148,12 @@ public class StudentDAO {
         return null;
     }
 
-    // تحديث المعدل التراكمي للطالب
+    /**
+     * تحديث المعدل التراكمي (GPA) لطالب معين.
+     * @param studentId معرف الطالب المراد تحديث معدله
+     * @param gpa المعدل الجديد المراد تعيينه
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void updateGPA(int studentId, double gpa) throws SQLException {
         String sql = "UPDATE student SET gpa = ? WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -127,6 +162,15 @@ public class StudentDAO {
             stmt.executeUpdate();
         }
     }
+
+    /**
+     * جلب تسجيلات طالب معين في فصل دراسي محدد حسب اسم الطالب، الفصل، والسنة.
+     * @param studentName اسم الطالب (يمكن أن يكون جزئي)
+     * @param season اسم الفصل الدراسي (مثل "Fall", "Spring")
+     * @param year سنة الفصل الدراسي
+     * @return قائمة التسجيلات التي تطابق المعايير مع بيانات الطالب، المادة، المعلم، الفصل والدرجة
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public List<Enrollment> getEnrollmentsByStudentAndSemester(String studentName, String season, int year) throws SQLException {
         List<Enrollment> list = new ArrayList<>();
         String sql = """

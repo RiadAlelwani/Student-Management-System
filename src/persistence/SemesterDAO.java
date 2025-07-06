@@ -6,16 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * فئة للوصول إلى بيانات الفصول الدراسية في قاعدة البيانات
+ * فئة للوصول إلى بيانات الفصول الدراسية في قاعدة البيانات.
+ * توفر عمليات إضافة، تحديث، حذف، واستعلام عن الفصول الدراسية.
  */
 public class SemesterDAO {
     private final Connection conn;
 
+    /**
+     * إنشاء DAO مع ربط الاتصال بقاعدة البيانات.
+     * @param conn اتصال قاعدة البيانات المفتوح
+     */
     public SemesterDAO(Connection conn) {
         this.conn = conn;
     }
 
-    // إضافة فصل دراسي جديد
+    /**
+     * إضافة فصل دراسي جديد إلى قاعدة البيانات.
+     * @param semester كائن الفصل الدراسي الجديد
+     * @throws SQLException في حالة حدوث خطأ أثناء التنفيذ
+     */
     public void add(Semester semester) throws SQLException {
         String sql = "INSERT INTO semester (season, year, is_open) VALUES (?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -26,7 +35,11 @@ public class SemesterDAO {
         }
     }
 
-    // تحديث بيانات الفصل الدراسي
+    /**
+     * تحديث بيانات فصل دراسي موجود.
+     * @param semester كائن الفصل الدراسي مع البيانات المحدثة
+     * @throws SQLException في حالة حدوث خطأ أثناء التنفيذ
+     */
     public void update(Semester semester) throws SQLException {
         String sql = "UPDATE semester SET season = ?, year = ?, is_open = ? WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -38,7 +51,11 @@ public class SemesterDAO {
         }
     }
 
-    // حذف فصل دراسي
+    /**
+     * حذف فصل دراسي من قاعدة البيانات بناءً على المعرف.
+     * @param id معرف الفصل الدراسي
+     * @throws SQLException في حالة حدوث خطأ أثناء التنفيذ
+     */
     public void delete(int id) throws SQLException {
         String sql = "DELETE FROM semester WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -47,7 +64,11 @@ public class SemesterDAO {
         }
     }
 
-    // الحصول على جميع الفصول الدراسية
+    /**
+     * الحصول على جميع الفصول الدراسية.
+     * @return قائمة تحتوي على جميع الفصول الدراسية المخزنة
+     * @throws SQLException في حالة حدوث خطأ أثناء التنفيذ
+     */
     public List<Semester> getAll() throws SQLException {
         List<Semester> list = new ArrayList<>();
         String sql = "SELECT * FROM semester";
@@ -65,7 +86,12 @@ public class SemesterDAO {
         return list;
     }
 
-    // الحصول على فصل دراسي بواسطة المعرف
+    /**
+     * الحصول على فصل دراسي بواسطة معرفه.
+     * @param id معرف الفصل الدراسي
+     * @return كائن الفصل الدراسي أو null إذا لم يتم العثور عليه
+     * @throws SQLException في حالة حدوث خطأ أثناء التنفيذ
+     */
     public Semester getById(int id) throws SQLException {
         String sql = "SELECT * FROM semester WHERE id = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -84,7 +110,12 @@ public class SemesterDAO {
         return null;
     }
 
-    // البحث عن فصول دراسية بالاسم
+    /**
+     * البحث عن فصول دراسية حسب اسم الفصل (season) جزئياً.
+     * @param name نص البحث في اسم الفصل الدراسي
+     * @return قائمة الفصول التي تطابق النص البحثي جزئياً
+     * @throws SQLException في حالة حدوث خطأ أثناء التنفيذ
+     */
     public List<Semester> searchByName(String name) throws SQLException {
         List<Semester> list = new ArrayList<>();
         String sql = "SELECT * FROM semester WHERE season LIKE ?";

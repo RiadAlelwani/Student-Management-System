@@ -8,14 +8,28 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.List;
 
+/**
+ * تقرير يعرض الطلاب المسجلين في مقرر معين خلال فصل دراسي معين.
+ * يقوم التقرير بطلب اسم المقرر والفصل الدراسي، ثم يعرض جدولًا يحتوي بيانات الطلاب المسجلين مع درجاتهم.
+ */
 public class StudentsByCourseSemesterReport implements Report {
     private final StudentService studentService;
     private JPanel reportPanel;
 
+    /**
+     * منشئ التقرير مع خدمة الطلاب.
+     *
+     * @param studentService خدمة الوصول إلى بيانات الطلاب والتسجيلات
+     */
     public StudentsByCourseSemesterReport(StudentService studentService) {
         this.studentService = studentService;
     }
 
+    /**
+     * يعرض التقرير، يطلب من المستخدم إدخال اسم المقرر والفصل الدراسي، ثم يعرض الطلاب المسجلين.
+     *
+     * @param parent العنصر الأب لعرض النوافذ الحوارية والأخطاء
+     */
     @Override
     public void show(Component parent) {
         try {
@@ -42,7 +56,7 @@ public class StudentsByCourseSemesterReport implements Report {
                 return;
             }
 
-            // إعداد البيانات
+            // تحضير بيانات الطلاب والدرجات للعرض في الجدول
             String[] columns = {"Student Name", "Email", "Gender", "Age", "Major", "GPA", "Grade"};
             Object[][] data = new Object[enrollments.size()][columns.length];
 
@@ -58,7 +72,7 @@ public class StudentsByCourseSemesterReport implements Report {
                 data[i][6] = grade >= 0 ? String.format("%.2f", grade) : "N/A";
             }
 
-            // إنشاء لوحة التقرير
+            // إنشاء لوحة التقرير مع العنوان والمعلومات والجدول
             reportPanel = createReportPanel(
                     "Students in Course",
                     data,
@@ -74,22 +88,38 @@ public class StudentsByCourseSemesterReport implements Report {
         }
     }
 
+    /**
+     * إرجاع لوحة التقرير التي تحتوي الجدول والبيانات، أو null إذا لم يتم إنشاؤها.
+     *
+     * @return JPanel التقرير
+     */
     @Override
     public JPanel getReportPanel() {
         return reportPanel;
     }
 
+    /**
+     * ينشئ لوحة تقرير تحتوي جدول الطلاب مع عنوان ومعلومات موجزة.
+     *
+     * @param title   عنوان التقرير
+     * @param data    بيانات الجدول (صفوف وأعمدة)
+     * @param columns أسماء الأعمدة
+     * @param line1   السطر الأول من المعلومات فوق الجدول (مثل اسم المقرر)
+     * @param line2   السطر الثاني من المعلومات فوق الجدول (مثل الفصل الدراسي)
+     * @param footer  نص الملخص أو المجموع (مثل عدد الطلاب)
+     * @return JPanel جاهزة للعرض
+     */
     private JPanel createReportPanel(String title, Object[][] data, String[] columns,
                                      String line1, String line2, String footer) {
         JPanel panel = new JPanel(new BorderLayout(10, 10));
 
-        // العنوان العلوي
+        // العنوان العلوي للتقرير
         JLabel titleLabel = new JLabel(title);
         titleLabel.setFont(new Font("Arial", Font.BOLD, 18));
         titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
         panel.add(titleLabel, BorderLayout.NORTH);
 
-        // معلومات فوق الجدول
+        // معلومات نصية فوق الجدول
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.add(new JLabel(line1));
@@ -97,7 +127,7 @@ public class StudentsByCourseSemesterReport implements Report {
         infoPanel.add(new JLabel(footer));
         panel.add(infoPanel, BorderLayout.BEFORE_FIRST_LINE);
 
-        // الجدول
+        // جدول البيانات داخل JScrollPane
         JTable table = new JTable(data, columns);
         JScrollPane scrollPane = new JScrollPane(table);
         panel.add(scrollPane, BorderLayout.CENTER);

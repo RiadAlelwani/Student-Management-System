@@ -1,3 +1,10 @@
+/**
+ * CourseGUI هي واجهة رسومية (JPanel) لإدارة المقررات الدراسية.
+ * تتيح للمستخدم إضافة، تعديل، حذف، والبحث في المقررات.
+ * تعتمد على الخدمات CourseService، TeacherService، وDepartmentService.
+ * تقوم بتحديث نفسها تلقائيًا عند تغيير قائمة المعلمين أو المقررات باستخدام نمط Observer.
+ */
+
 package presentation;
 
 import domain.Course;
@@ -28,23 +35,31 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
 
     private static final long serialVersionUID = 1L;
 
+    // مكونات الإدخال
     private JComboBox<Teacher> cbTeacher;
     private JComboBox<Department> cbDepartment;
     private JTextField tfName, tfDescription, tfCredits, tfSearch;
 
+    // الجدول ونموذجه
     private JTable table;
     private DefaultTableModel tableModel;
 
+    // الخدمات
     private CourseService courseService;
     private TeacherService teacherService;
     private DepartmentService departmentService;
 
+    // قوائم مؤقتة لتخزين المعلمين والأقسام
     private List<Teacher> cachedTeachers = new ArrayList<>();
     private List<Department> cachedDepartments = new ArrayList<>();
 
+    /**
+     * المُنشئ: يبني الواجهة ويربطها بالمراقبين ويحمل البيانات.
+     */
     public CourseGUI(Connection conn) {
         setLayout(new BorderLayout());
 
+        // التسجيل كمراقب
         TeacherNotifier.register(this);
         CourseNotifier.register(this);
 
@@ -63,6 +78,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         loadCourses();
     }
 
+    /**
+     * إنشاء واجهة المستخدم من الحقول والجداول والأزرار.
+     */
     private void buildUI() {
         tfName = new JTextField(15);
         tfDescription = new JTextField(15);
@@ -73,12 +91,11 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
 
         JPanel inputPanel = new JPanel(new GridBagLayout());
         inputPanel.setBorder(BorderFactory.createTitledBorder("Course Info"));
-
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.insets = new Insets(5,5,5,5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        // Row 1
+        // الصف الأول
         gbc.gridx = 0; gbc.gridy = 0;
         inputPanel.add(new JLabel("Course Name:"), gbc);
         gbc.gridx = 1;
@@ -89,7 +106,7 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         gbc.gridx = 3;
         inputPanel.add(cbTeacher, gbc);
 
-        // Row 2
+        // الصف الثاني
         gbc.gridx = 0; gbc.gridy = 1;
         inputPanel.add(new JLabel("Description:"), gbc);
         gbc.gridx = 1;
@@ -105,6 +122,7 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         gbc.gridx = 5;
         inputPanel.add(cbDepartment, gbc);
 
+        // شريط البحث
         JPanel searchPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
         searchPanel.add(new JLabel("Search by Course Name:"));
         searchPanel.add(tfSearch);
@@ -112,37 +130,34 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         JPanel topPanel = new JPanel(new BorderLayout());
         topPanel.add(inputPanel, BorderLayout.WEST);
         topPanel.add(searchPanel, BorderLayout.SOUTH);
-
         add(topPanel, BorderLayout.NORTH);
 
+        // إعداد الجدول
         tableModel = new DefaultTableModel(new String[]{"ID", "Name", "Description", "Credits", "Teacher", "Department"}, 0) {
-            /**
-			 * 
-			 */
-			private static final long serialVersionUID = 1L;
-
-			@Override
+            private static final long serialVersionUID = 1L;
             public boolean isCellEditable(int row, int column) {
                 return false;
             }
         };
-
         table = new JTable(tableModel);
+        table.setDefaultEditor(Object.class, null); // 
+        // تلوين الصفوف بالتناوب لتحسين المظهر
+        presentation.GUIUtils.configureTable(table);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
+        // أزرار التحكم
         JPanel buttonPanel = new JPanel();
         JButton addBtn = new JButton("Add");
         JButton updateBtn = new JButton("Update");
         JButton deleteBtn = new JButton("Delete");
         JButton clearBtn = new JButton("Clear");
-
         buttonPanel.add(addBtn);
         buttonPanel.add(updateBtn);
         buttonPanel.add(deleteBtn);
         buttonPanel.add(clearBtn);
-
         add(buttonPanel, BorderLayout.SOUTH);
 
+        // ربط الأحداث
         addBtn.addActionListener(e -> addCourse());
         updateBtn.addActionListener(e -> updateCourse());
         deleteBtn.addActionListener(e -> deleteCourse());
@@ -167,6 +182,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         });
     }
 
+    /**
+     * تحميل بيانات المقررات من الخدمة.
+     */
     private void loadCourses() {
         try {
             tableModel.setRowCount(0);
@@ -186,6 +204,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * تحميل قائمة المعلمين.
+     */
     private void loadTeachers() {
         try {
             cbTeacher.removeAllItems();
@@ -196,6 +217,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * تحميل قائمة الأقسام.
+     */
     private void loadDepartments() {
         try {
             cbDepartment.removeAllItems();
@@ -206,6 +230,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * إضافة مقرر جديد.
+     */
     private void addCourse() {
         try {
             if (!validateInput()) return;
@@ -238,6 +265,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * تعديل بيانات مقرر موجود.
+     */
     private void updateCourse() {
         int row = table.getSelectedRow();
         if (row == -1) {
@@ -277,6 +307,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * حذف مقرر محدد.
+     */
     private void deleteCourse() {
         int row = table.getSelectedRow();
         if (row == -1) {
@@ -297,6 +330,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * البحث في المقررات.
+     */
     private void search() {
         try {
             String keyword = tfSearch.getText().toLowerCase();
@@ -320,6 +356,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * تفريغ الحقول.
+     */
     private void clearFields() {
         tfName.setText("");
         tfDescription.setText("");
@@ -368,6 +407,9 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         }
     }
 
+    /**
+     * التحقق من صحة البيانات المدخلة.
+     */
     private boolean validateInput() {
         String name = tfName.getText().trim();
         String desc = tfDescription.getText().trim();
@@ -404,11 +446,13 @@ public class CourseGUI extends JPanel implements CourseObserver, TeacherObserver
         JOptionPane.showMessageDialog(this, msg, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
+    // المراقبة لتحديث المقررات
     @Override
     public void onCourseListChanged() {
         loadCourses();
     }
 
+    // المراقبة لتحديث المعلمين
     @Override
     public void onTeacherListChanged() {
         loadTeachers();

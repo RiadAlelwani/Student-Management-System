@@ -6,16 +6,25 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * فئة للوصول إلى بيانات المسؤولين في قاعدة البيانات
+ * فئة DAO (Data Access Object) للتعامل مع بيانات المسؤولين (Admin)
+ * في قاعدة البيانات عبر استعلامات SQL.
  */
 public class AdminDAO {
     private final Connection conn;
 
+    /**
+     * إنشاء كائن AdminDAO مع تمرير اتصال قاعدة البيانات.
+     * @param conn اتصال قاعدة البيانات النشط
+     */
     public AdminDAO(Connection conn) {
         this.conn = conn;
     }
 
-    // إضافة مسؤول جديد
+    /**
+     * إضافة مسؤول جديد إلى قاعدة البيانات.
+     * @param admin كائن Admin يحتوي بيانات المسؤول الجديد
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public void insert(Admin admin) throws SQLException {
         String sql = "INSERT INTO admin (name, email, gender, age, username, password) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -29,7 +38,12 @@ public class AdminDAO {
         }
     }
 
-    // التحقق من وجود اسم مستخدم
+    /**
+     * التحقق مما إذا كان اسم المستخدم موجودًا في قاعدة البيانات.
+     * @param username اسم المستخدم للتحقق منه
+     * @return true إذا كان اسم المستخدم موجودًا، false خلاف ذلك
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public boolean existsByUsername(String username) throws SQLException {
         String sql = "SELECT COUNT(*) FROM admin WHERE username = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -39,7 +53,13 @@ public class AdminDAO {
         }
     }
 
-    // مصادقة المسؤول
+    /**
+     * مصادقة المسؤول عبر اسم المستخدم وكلمة المرور.
+     * @param username اسم المستخدم
+     * @param password كلمة المرور
+     * @return كائن Admin إذا تم التحقق بنجاح، أو null إذا فشل التحقق
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public Admin authenticate(String username, String password) throws SQLException {
         String sql = "SELECT * FROM admin WHERE username = ? AND password = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -61,7 +81,11 @@ public class AdminDAO {
         return null;
     }
 
-    // تحديث بيانات المسؤول
+    /**
+     * تحديث بيانات مسؤول موجود في قاعدة البيانات.
+     * @param admin كائن Admin يحتوي البيانات المحدثة (يجب أن يكون الاسم المستخدم موجودًا)
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public void update(Admin admin) throws SQLException {
         String sql = "UPDATE admin SET name = ?, email = ?, gender = ?, age = ?, password = ? WHERE username = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -75,7 +99,11 @@ public class AdminDAO {
         }
     }
 
-    // حذف مسؤول
+    /**
+     * حذف مسؤول من قاعدة البيانات بواسطة اسم المستخدم.
+     * @param username اسم المستخدم الخاص بالمسؤول المراد حذفه
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public void delete(String username) throws SQLException {
         String sql = "DELETE FROM admin WHERE username = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {
@@ -84,7 +112,11 @@ public class AdminDAO {
         }
     }
 
-    // الحصول على جميع المسؤولين
+    /**
+     * جلب جميع المسؤولين من قاعدة البيانات.
+     * @return قائمة تحتوي جميع المسؤولين
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public List<Admin> getAll() throws SQLException {
         List<Admin> list = new ArrayList<>();
         String sql = "SELECT * FROM admin";
@@ -105,7 +137,12 @@ public class AdminDAO {
         return list;
     }
 
-    // الحصول على مسؤول بواسطة اسم المستخدم
+    /**
+     * جلب مسؤول بواسطة اسم المستخدم.
+     * @param username اسم المستخدم للمسؤول المطلوب
+     * @return كائن Admin إذا وجد، أو null إذا لم يوجد
+     * @throws SQLException في حال حدوث خطأ في استعلام SQL
+     */
     public Admin getByUsername(String username) throws SQLException {
         String sql = "SELECT * FROM admin WHERE username = ?";
         try (PreparedStatement stmt = conn.prepareStatement(sql)) {

@@ -11,6 +11,11 @@ import java.awt.event.*;
 import java.sql.Connection;
 import java.util.List;
 
+/**
+ * واجهة المستخدم EnrollmentGUI تتيح إدارة تسجيلات الطلاب في المقررات.
+ * تشمل الوظائف: إضافة، تعديل، حذف، واستعراض التسجيلات.
+ * تعتمد على خدمات متعددة وتستخدم نمط Observer لتحديث البيانات عند حدوث تغييرات.
+ */
 public class EnrollmentGUI extends JPanel
         implements StudentObserver, CourseObserver, TeacherObserver, SemesterObserver {
 
@@ -30,6 +35,11 @@ public class EnrollmentGUI extends JPanel
     private final JComboBox<Semester> cbSemester;
     private final JComboBox<Teacher> cbTeacher;
 
+    /**
+     * منشئ EnrollmentGUI يقوم بتهيئة المكونات، تحميل البيانات، وربط الأحداث.
+     * @param conn اتصال قاعدة البيانات
+     * @throws Exception في حال حدوث خطأ في تحميل البيانات
+     */
     public EnrollmentGUI(Connection conn) throws Exception {
         setLayout(new BorderLayout());
 
@@ -87,7 +97,9 @@ public class EnrollmentGUI extends JPanel
         // إنشاء الجدول وتهيئته
         tableModel = new DefaultTableModel(new String[]{"Student", "Course", "Grade", "Semester", "Teacher"}, 0);
         table = new JTable(tableModel);
-        table.setDefaultEditor(Object.class, null); // لجعل الجدول للعرض فقط
+        table.setDefaultEditor(Object.class, null);  // تعطيل التعديل المباشر
+        // تلوين الصفوف بالتناوب لتحسين المظهر
+        presentation.GUIUtils.configureTable(table);
         add(new JScrollPane(table), BorderLayout.CENTER);
 
         // أزرار التحكم
@@ -173,31 +185,49 @@ public class EnrollmentGUI extends JPanel
 
     // --- تنفيذ واجهات المراقبة ---
 
+    /**
+     * يتم استدعاؤه عند تغيير قائمة الطلاب.
+     */
     @Override
     public void onStudentListChanged() {
         loadStudents();
     }
 
+    /**
+     * يتم استدعاؤه عند تغيير قائمة المقررات.
+     */
     @Override
     public void onCourseListChanged() {
         loadCourses();
     }
 
+    /**
+     * يتم استدعاؤه عند تغيير قائمة المعلمين.
+     */
     @Override
     public void onTeacherListChanged() {
         loadTeachers();
     }
 
+    /**
+     * يتم استدعاؤه عند تغيير قائمة المعلمين (نسخة تحتوي على القائمة).
+     */
     @Override
     public void onTeacherListChanged(List<Teacher> updatedList) {
         loadTeachers();
     }
 
+    /**
+     * يتم استدعاؤه عند تغيير قائمة الفصول الدراسية.
+     */
     @Override
     public void onSemesterListChanged() {
         loadSemesters();
     }
 
+    /**
+     * يتم استدعاؤه عند تغيير قائمة الفصول الدراسية (نسخة تحتوي على القائمة).
+     */
     @Override
     public void onSemesterListChanged(List<Semester> updatedList) {
         loadSemesters();
@@ -205,6 +235,9 @@ public class EnrollmentGUI extends JPanel
 
     // --- تحميل البيانات ---
 
+    /**
+     * تحميل قائمة الطلاب في القائمة المنسدلة.
+     */
     private void loadStudents() {
         try {
             cbStudent.removeAllItems();
@@ -216,6 +249,9 @@ public class EnrollmentGUI extends JPanel
         }
     }
 
+    /**
+     * تحميل قائمة المقررات.
+     */
     private void loadCourses() {
         try {
             cbCourse.removeAllItems();
@@ -227,6 +263,9 @@ public class EnrollmentGUI extends JPanel
         }
     }
 
+    /**
+     * تحميل قائمة الفصول الدراسية.
+     */
     private void loadSemesters() {
         try {
             cbSemester.removeAllItems();
@@ -238,6 +277,9 @@ public class EnrollmentGUI extends JPanel
         }
     }
 
+    /**
+     * تحميل قائمة المعلمين.
+     */
     private void loadTeachers() {
         try {
             cbTeacher.removeAllItems();
@@ -249,6 +291,9 @@ public class EnrollmentGUI extends JPanel
         }
     }
 
+    /**
+     * تحميل بيانات التسجيلات إلى الجدول.
+     */
     private void loadData() {
         try {
             fillTable(enrollmentService.getAll());
@@ -257,6 +302,10 @@ public class EnrollmentGUI extends JPanel
         }
     }
 
+    /**
+     * تعبئة الجدول ببيانات التسجيلات.
+     * @param list قائمة التسجيلات
+     */
     private void fillTable(List<Enrollment> list) {
         tableModel.setRowCount(0);
         for (Enrollment e : list) {
@@ -272,6 +321,10 @@ public class EnrollmentGUI extends JPanel
 
     // --- بناء الكائن من الحقول مع تحقق ---
 
+    /**
+     * بناء كائن Enrollment من الحقول المدخلة في النموذج.
+     * @return كائن التسجيل
+     */
     private Enrollment buildFromFields() {
         Student student = (Student) cbStudent.getSelectedItem();
         Course course = (Course) cbCourse.getSelectedItem();
@@ -302,6 +355,9 @@ public class EnrollmentGUI extends JPanel
 
     // --- مسح الحقول ---
 
+    /**
+     * إعادة تعيين الحقول إلى حالتها الافتراضية.
+     */
     private void clearFields() {
         cbStudent.setSelectedIndex(0);
         cbCourse.setSelectedIndex(0);
@@ -313,6 +369,9 @@ public class EnrollmentGUI extends JPanel
 
     // --- مساعدة تحديد عناصر JComboBox بناءً على الاسم أو النص ---
 
+    /**
+     * تحديد عنصر في JComboBox بناءً على النص الظاهر.
+     */
     private void selectComboBoxByText(JComboBox<?> cb, String text) {
         for (int i = 0; i < cb.getItemCount(); i++) {
             if (cb.getItemAt(i).toString().equals(text)) {
@@ -322,6 +381,9 @@ public class EnrollmentGUI extends JPanel
         }
     }
 
+    /**
+     * تحديد عنصر في JComboBox بناءً على الاسم (getName).
+     */
     private void selectComboBoxByName(JComboBox<?> cb, String name) {
         for (int i = 0; i < cb.getItemCount(); i++) {
             try {
@@ -338,6 +400,10 @@ public class EnrollmentGUI extends JPanel
 
     // --- عرض رسالة الخطأ ---
 
+    /**
+     * عرض رسالة خطأ للمستخدم في مربع حوار.
+     * @param e الاستثناء الحاصل
+     */
     private void showError(Exception e) {
         e.printStackTrace();
         JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);

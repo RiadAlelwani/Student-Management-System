@@ -5,13 +5,25 @@ import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * فئة للوصول إلى بيانات المعلمين في قاعدة البيانات.
+ */
 public class TeacherDAO {
     private final Connection conn;
 
+    /**
+     * منشئ الفئة يأخذ اتصال قاعدة البيانات.
+     * @param conn اتصال قاعدة البيانات المفتوح
+     */
     public TeacherDAO(Connection conn) {
         this.conn = conn;
     }
 
+    /**
+     * إضافة معلم جديد إلى قاعدة البيانات.
+     * @param t كائن المعلم الذي يحتوي على البيانات المراد إضافتها
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void addTeacher(Teacher t) throws SQLException {
         String sql = "INSERT INTO teacher (name, email, gender, age, department_id, salary) VALUES (?, ?, ?, ?, ?, ?)";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -25,6 +37,11 @@ public class TeacherDAO {
         }
     }
 
+    /**
+     * الحصول على قائمة بجميع المعلمين مع أسماء الأقسام الخاصة بهم.
+     * @return قائمة تحتوي على جميع كائنات المعلمين
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public List<Teacher> getAll() throws SQLException {
         List<Teacher> list = new ArrayList<>();
         String sql = "SELECT t.*, d.name AS department_name FROM teacher t JOIN department d ON t.department_id = d.id";
@@ -47,6 +64,11 @@ public class TeacherDAO {
         return list;
     }
 
+    /**
+     * تحديث بيانات معلم موجود في قاعدة البيانات.
+     * @param t كائن المعلم الذي يحتوي على البيانات الجديدة (يجب أن يحتوي على المعرف)
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void updateTeacher(Teacher t) throws SQLException {
         String sql = "UPDATE teacher SET name = ?, email = ?, gender = ?, age = ?, department_id = ?, salary = ? WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -61,6 +83,11 @@ public class TeacherDAO {
         }
     }
 
+    /**
+     * حذف معلم من قاعدة البيانات بواسطة المعرف.
+     * @param id معرف المعلم المراد حذفه
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public void deleteTeacher(int id) throws SQLException {
         String sql = "DELETE FROM teacher WHERE id = ?";
         try (PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -69,6 +96,12 @@ public class TeacherDAO {
         }
     }
 
+    /**
+     * البحث عن معلمين حسب اسم جزئي (باستخدام LIKE) مع جلب أسماء الأقسام.
+     * @param name جزء من اسم المعلم للبحث به
+     * @return قائمة المعلمين الذين تحتوي أسماؤهم على النص المحدد مع بيانات القسم
+     * @throws SQLException في حال حدوث خطأ أثناء تنفيذ الاستعلام
+     */
     public List<Teacher> searchByName(String name) throws SQLException {
         List<Teacher> list = new ArrayList<>();
         String sql = "SELECT t.*, d.name AS department_name FROM teacher t JOIN department d ON t.department_id = d.id WHERE t.name LIKE ?";
@@ -94,7 +127,11 @@ public class TeacherDAO {
         return list;
     }
 
-    // ✨ دالة خاصة لتحويل الراتب إذا كان مكتوبًا بالفاصلة
+    /**
+     * دالة خاصة لتحويل قيمة الراتب من نص قد يحتوي على فاصلة عشرية إلى رقم عشري.
+     * @param salaryStr نص الراتب المحتمل أن يحتوي على فاصلة بدلاً من نقطة
+     * @return قيمة الراتب كرقم عشري (double)، أو 0.0 إذا تعذر التحويل
+     */
     private double parseSalary(String salaryStr) {
         if (salaryStr == null || salaryStr.isEmpty()) return 0.0;
         try {

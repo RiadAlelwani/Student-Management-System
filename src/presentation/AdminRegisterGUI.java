@@ -1,4 +1,4 @@
-package presentation;  // الحزمة التي ينتمي إليها الكلاس، تمثل طبقة العرض (واجهة المستخدم)
+package presentation;  // الحزمة التي ينتمي إليها الكلاس، تمثل طبقة العرض (واجهة المستخدم) 
 
 import persistence.AdminDAO;         // DAO للوصول إلى قاعدة البيانات الخاصة بالمشرفين
 import domain.Admin;                 // كائن يمثل المشرف
@@ -11,20 +11,39 @@ import java.awt.event.*;            // مكتبة للتعامل مع الأحد
 import java.sql.Connection;         // مكتبة للتعامل مع الاتصال بقاعدة البيانات
 import java.util.List;              // قائمة لتخزين بيانات المشرفين
 
-// واجهة تسجيل وإدارة المستخدمين من نوع Admin
+/**
+ * واجهة تسجيل وإدارة المستخدمين من نوع Admin.
+ * توفر إمكانية إدخال بيانات مشرف جديد، تعديل بيانات مشرف موجود، حذف مشرف،
+ * وعرض جميع المشرفين في جدول تفاعلي.
+ */
 public class AdminRegisterGUI extends JPanel {
-    private static final long serialVersionUID = 1L; // رقم تعريف للسريال (لضمان التوافق)
+    private static final long serialVersionUID = 1L; // رقم تعريف للسريال (لضمان التوافق عند تسلسل الكائنات)
 
-    private AdminDAO adminDAO;  // كائن الوصول للبيانات Admin (التعامل مع قاعدة البيانات)
+    /** كائن الوصول للبيانات Admin (التعامل مع قاعدة البيانات) */
+    private AdminDAO adminDAO;
 
-    // مكونات الواجهة الرسومية
-    private JTable table;                        // جدول لعرض بيانات المشرفين
-    private DefaultTableModel tableModel;        // نموذج الجدول لتخزين البيانات المعروضة
-    private JTextField tfName, tfEmail, tfAge, tfUsername; // حقول إدخال البيانات النصية
-    private JComboBox<String> cbGender;          // قائمة لاختيار الجنس (ذكر/أنثى)
-    private JPasswordField pfPassword;           // حقل لإدخال كلمة المرور
+    /** جدول لعرض بيانات المشرفين */
+    private JTable table;
 
-    // المُنشئ - يُنشئ الواجهة ويستقبل اتصال قاعدة البيانات
+    /** نموذج الجدول لتخزين البيانات المعروضة */
+    private DefaultTableModel tableModel;
+
+    /** حقول إدخال البيانات النصية للاسم، البريد الإلكتروني، العمر، واسم المستخدم */
+    private JTextField tfName, tfEmail, tfAge, tfUsername;
+
+    /** قائمة لاختيار الجنس (ذكر/أنثى) */
+    private JComboBox<String> cbGender;
+
+    /** حقل لإدخال كلمة المرور */
+    private JPasswordField pfPassword;
+
+    /**
+     * المُنشئ - يُنشئ الواجهة ويستقبل اتصال قاعدة البيانات.
+     * يقوم بتهيئة المكونات الرسومية، تحميل بيانات المشرفين من قاعدة البيانات،
+     * وضبط أحداث الأزرار والتفاعل مع الجدول.
+     *
+     * @param conn اتصال قاعدة البيانات المستخدم لإنشاء AdminDAO
+     */
     public AdminRegisterGUI(Connection conn) {
         setLayout(new BorderLayout()); // استخدام تصميم BorderLayout لتقسيم الواجهة
 
@@ -39,6 +58,7 @@ public class AdminRegisterGUI extends JPanel {
         JPanel topPanel = new JPanel(new BorderLayout());
         JPanel inputPanel = new JPanel(new GridBagLayout()); // تصميم مرن للمكونات
         inputPanel.setBorder(BorderFactory.createTitledBorder("Admin Info")); // عنوان للوحة الإدخال
+
         GridBagConstraints gbc = new GridBagConstraints(); // إعدادات التصميم الداخلي
         gbc.insets = new Insets(5, 5, 5, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -89,6 +109,9 @@ public class AdminRegisterGUI extends JPanel {
         // ====== الجزء الأوسط: جدول عرض بيانات المشرفين ======
         tableModel = new DefaultTableModel(new String[]{"Name", "Email", "Gender", "Age", "Username"}, 0);
         table = new JTable(tableModel);
+        table.setDefaultEditor(Object.class, null);  // تعطيل التعديل المباشر
+        // تلوين الصفوف بالتناوب لتحسين المظهر
+        presentation.GUIUtils.configureTable(table);
         add(new JScrollPane(table), BorderLayout.CENTER); // جدول داخل Scroll Pane لتفعيل التمرير
 
         // ====== الجزء السفلي: أزرار العمليات ======
@@ -115,6 +138,7 @@ public class AdminRegisterGUI extends JPanel {
 
         // عند الضغط على صف في الجدول يتم تعبئة الحقول تلقائيًا
         table.addMouseListener(new MouseAdapter() {
+            @Override
             public void mouseClicked(MouseEvent e) {
                 int row = table.getSelectedRow();
                 tfName.setText(tableModel.getValueAt(row, 0).toString());
@@ -122,12 +146,16 @@ public class AdminRegisterGUI extends JPanel {
                 cbGender.setSelectedItem(tableModel.getValueAt(row, 2).toString());
                 tfAge.setText(tableModel.getValueAt(row, 3).toString());
                 tfUsername.setText(tableModel.getValueAt(row, 4).toString());
-                pfPassword.setText(""); // لا يتم عرض كلمة المرور
+                pfPassword.setText(""); // لا يتم عرض كلمة المرور لأسباب أمنية
             }
         });
     }
 
-    // دالة لإضافة مشرف جديد
+    /**
+     * دالة لإضافة مشرف جديد.
+     * تتحقق من صحة البيانات، تشفر كلمة المرور، وتضيف السجل لقاعدة البيانات.
+     * بعد الإضافة يتم تحديث الجدول ومسح الحقول.
+     */
     private void insertAdmin() {
         try {
             String username = tfUsername.getText().trim();
@@ -144,7 +172,7 @@ public class AdminRegisterGUI extends JPanel {
             }
 
             String hashedPassword = PasswordUtil.hashPassword(password); // تشفير كلمة المرور
-            Admin admin = getAdminFromFields(hashedPassword); // إنشاء كائن المشرف
+            Admin admin = getAdminFromFields(hashedPassword); // إنشاء كائن المشرف من الحقول
             adminDAO.insert(admin); // إدخاله في قاعدة البيانات
             showMessage("Admin added", false);
             loadData();     // تحديث الجدول
@@ -154,7 +182,11 @@ public class AdminRegisterGUI extends JPanel {
         }
     }
 
-    // دالة لتحديث مشرف موجود
+    /**
+     * دالة لتحديث مشرف موجود.
+     * تقوم بتحديث بيانات المشرف في قاعدة البيانات باستخدام اسم المستخدم كمفتاح.
+     * بعد التحديث يتم تحديث الجدول ومسح الحقول.
+     */
     private void updateAdmin() {
         try {
             String username = tfUsername.getText().trim();
@@ -176,7 +208,10 @@ public class AdminRegisterGUI extends JPanel {
         }
     }
 
-    // دالة لحذف مشرف من قاعدة البيانات
+    /**
+     * دالة لحذف مشرف من قاعدة البيانات.
+     * تتطلب تحديد اسم المستخدم، وبعد الحذف يتم تحديث الجدول ومسح الحقول.
+     */
     private void deleteAdmin() {
         try {
             String username = tfUsername.getText().trim();
@@ -195,7 +230,12 @@ public class AdminRegisterGUI extends JPanel {
         }
     }
 
-    // دالة لإنشاء كائن Admin من بيانات الحقول
+    /**
+     * دالة لإنشاء كائن Admin من بيانات الحقول المدخلة.
+     *
+     * @param hashedPassword كلمة المرور المشفرة لاستخدامها في الكائن
+     * @return كائن Admin جديد يمثل بيانات الإدخال
+     */
     private Admin getAdminFromFields(String hashedPassword) {
         return new Admin(
                 tfName.getText().trim(),
@@ -207,7 +247,10 @@ public class AdminRegisterGUI extends JPanel {
         );
     }
 
-    // تحميل جميع بيانات المشرفين من قاعدة البيانات إلى الجدول
+    /**
+     * تحميل جميع بيانات المشرفين من قاعدة البيانات إلى الجدول.
+     * يتم مسح المحتويات السابقة وإضافة السجلات الجديدة.
+     */
     private void loadData() {
         try {
             tableModel.setRowCount(0); // مسح الجدول
@@ -222,7 +265,10 @@ public class AdminRegisterGUI extends JPanel {
         }
     }
 
-    // مسح جميع الحقول وإلغاء التحديد في الجدول
+    /**
+     * مسح جميع الحقول وإلغاء التحديد في الجدول.
+     * يستخدم لتنظيف النموذج قبل إدخال بيانات جديدة أو بعد تنفيذ عمليات.
+     */
     private void clearFields() {
         tfName.setText("");
         tfEmail.setText("");
@@ -233,13 +279,22 @@ public class AdminRegisterGUI extends JPanel {
         table.clearSelection();
     }
 
-    // عرض رسالة للمستخدم
+    /**
+     * عرض رسالة للمستخدم.
+     *
+     * @param msg  نص الرسالة
+     * @param error إذا كانت الرسالة خطأ (true) أو نجاح (false)
+     */
     private void showMessage(String msg, boolean error) {
         JOptionPane.showMessageDialog(this, msg, error ? "Error" : "Success",
                 error ? JOptionPane.ERROR_MESSAGE : JOptionPane.INFORMATION_MESSAGE);
     }
 
-    // عرض رسالة خطأ عند حصول استثناء
+    /**
+     * عرض رسالة خطأ عند حصول استثناء.
+     *
+     * @param e الاستثناء المراد عرضه
+     */
     private void showError(Exception e) {
         JOptionPane.showMessageDialog(this, e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
     }

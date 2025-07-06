@@ -4,23 +4,36 @@ import domain.Admin;
 import persistence.AdminDAO;
 import java.sql.Connection;
 
+/**
+ * خدمة إدارة عمليات المسؤول (Admin).
+ */
 public class AdminService {
     private final AdminDAO dao;
 
-    // إنشاء خدمة المسؤول مع اتصال قاعدة البيانات
+    /**
+     * منشئ الخدمة مع تمرير اتصال قاعدة البيانات.
+     * @param conn اتصال قاعدة البيانات
+     */
     public AdminService(Connection conn) {
         this.dao = new AdminDAO(conn);
     }
 
-    // تسجيل دخول المسؤول
+    /**
+     * محاولة تسجيل دخول المسؤول بالمستخدم وكلمة المرور.
+     * @param username اسم المستخدم
+     * @param password كلمة المرور
+     * @return كائن Admin عند نجاح المصادقة
+     * @throws Exception إذا فشل التحقق أو حدث خطأ أثناء الوصول إلى البيانات
+     */
     public Admin login(String username, String password) throws Exception {
-        // التحقق من إدخال اسم المستخدم وكلمة المرور
-        if (username == null || username.isBlank())
+        if (username == null || username.isBlank()) {
             throw new IllegalArgumentException("Username is required");
-        if (password == null || password.isBlank())
+        }
+        if (password == null || password.isBlank()) {
             throw new IllegalArgumentException("Password is required");
+        }
 
-        // مصادقة المسؤول عبر DAO
+        // تفويض المصادقة إلى DAO
         return dao.authenticate(username, password);
     }
 }
